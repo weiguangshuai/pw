@@ -1,0 +1,35 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cqupt.project.dao.ConfirmInfoDao">
+
+    <insert id="saveConfirmInfo" parameterType="ConfirmInfo">
+        INSERT INTO confirm_info (name, email, phone, address, user_id)
+        VALUES (#{name}, #{email}, #{phone}, #{address}, #{userId})
+    </insert>
+
+    <update id="updateConfirmInfo" parameterType="ConfirmInfo">
+        UPDATE confirm_info
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="email != null">
+                email = #{email},
+            </if>
+            <if test="phone != null">
+                phone = #{phone},
+            </if>
+            <if test="address != null">
+                address = #{address},
+            </if>
+        </set>
+        where user_id = #{userId}
+    </update>
+
+    <select id="findConfirmInfo" parameterType="int" resultType="com.cqupt.project.entity.ConfirmInfo">
+        SELECT *
+        FROM confirm_info
+        WHERE user_id = #{userId}
+    </select>
+</mapper>

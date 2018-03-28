@@ -1,0 +1,45 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cqupt.project.dao.DocumentDao">
+
+    <sql id="Base_Column_List">
+        doc_id, content, title, software_id
+    </sql>
+
+    <insert id="saveDoc" parameterType="Document">
+        INSERT INTO document (content, title, software_id)
+        VALUES (#{content}, #{title}, #{softwareId})
+    </insert>
+    <update id="updateDoc" parameterType="Document">
+        UPDATE document
+        <set>
+            <if test="content != null">
+                content = #{content},
+            </if>
+            <if test="title != null">
+                title = #{title},
+            </if>
+            <if test="softwareId != null">
+                software_id = #{softwareId},
+            </if>
+        </set>
+        where doc_id = #{docId}
+    </update>
+    <delete id="deleteDoc" parameterType="int">
+        DELETE FROM document
+        WHERE doc_id = #{docId}
+    </delete>
+    <select id="selectByDocId" resultType="com.cqupt.project.entity.Document">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM document WHERE doc_id = #{docId}
+    </select>
+    <select id="selectBySoftwareId" resultType="com.cqupt.project.entity.Document">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM document WHERE software_id = #{softwareId}
+    </select>
+
+
+</mapper>

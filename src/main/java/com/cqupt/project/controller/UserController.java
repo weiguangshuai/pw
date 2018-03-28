@@ -1,0 +1,207 @@
+package com.cqupt.project.controller;
+
+import com.cqupt.project.commons.Result;
+import com.cqupt.project.entity.ConfirmInfo;
+import com.cqupt.project.entity.User;
+import com.cqupt.project.service.ConfirmInfoService;
+import com.cqupt.project.service.UserService;
+import com.cqupt.project.util.CacheUtil;
+import com.cqupt.project.util.CookieUtil;
+import com.cqupt.project.util.MD5Util;
+import com.cqupt.project.util.MailUtil;
+import com.google.code.kaptcha.Constants;
+import com.google.code.kaptcha.Producer;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Date;
+
+/**
+ * @author weigs
+ * @date 2017/11/16 0016
+ */
+@Controller
+@RequestMapping(value = "/user")
+@CrossOrigin("*")
+public class UserController {
+    private static final Logger log = Logger.getLogger(UserController.class);
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private Producer captchaProducer;
+
+    @Autowired
+    private ConfirmInfoService confirmInfoService;
+
+    /**
+     * 用户注册
+     *
+     * @param user
+     * @return
+     */
+    @RequestMapping(value = "/register", method = RequestMethod.POST)
+    @ResponseBody
+    public Result register(User user, HttpServletResponse response) {
+        user.setCreateTime(new Date());
+
+        /**
+         * 1代表普通用户
+         * 2代表管理员用户
+         */
+        user.setAuthority(1);
+        user.setPassword(MD5Util.encodeByMD5(user.getPassword()));
+        String userLogin = CookieUtil.setLoginUser(response);
+        CacheUtil.setUserInfo(userLogin, user);
+
+        return userService.saveUserInfo(user);
+    }
+
+    /**
+     * 发送邮箱验证码
+     *
+     * @param email
+     * @param request
+     */
+    @RequestMapping(value = "/sendmail", method = RequestMethod.POST)
+    public void sendMail(String email, HttpServletRequest request) {
+        MailUtil mailUtil = new MailUtil();
+        mailUtil.setToAddress(email);
+        //随机生成验证码并将验证码保存到session中去
+        String capText = captchaProducer.createText();
+        request.getSession().setAttribute(Constants.KAPTCHA_SESSION_KEY, capText);
+        mailUtil.setContent(capText);
+        mailUtil.setSubject("注册");
+        try {
+            userService.sendMail(mailUtil);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 判断验证码是否正确
+     *
+     * @param code
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "/judgecode", method = RequestMethod.GET)
+    @ResponseBody
+    public Result judgeCode(String code, HttpServletRequest request) {
+        String capText = (String) request.getSession()
+                .getAttribute(Constants.KAPTCHA_SESSION_KEY);
+        if (!StringUtils.isEmpty(code) && !StringUtils.isEmpty(capText)
+                && code.equals(capText)) {
+            //清除session中的验证码
+            request.getSession().removeAttribute(Constants.KAPTCHA_SESSION_KEY);
+            return Result.success();
+        }
+        return Result.error("验证码错误");
+    }
+
+    /**
+     * 用户登录
+     *
+     * @param response
+     * @param user
+     * @param model
+     * @return
+     */
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    @ResponseBody
+    public Result login(HttpServletResponse response, User user, Model model) {
+
+        Result result = userService.userLogin(user.getEmail(),
+                MD5Util.encodeByMD5(user.getPassword()));
+
+        //判断是否登录成功，登录成功就将数据存入cookie和缓存中
+        if (result.isSuccess()) {
+            String userLogin = CookieUtil.setLoginUser(response);
+            CacheUtil.setUserInfo(userLogin, (User) result.getData());
+        }
+        return result;
+    }
+
+    /**
+     * 退出登录
+     *
+     * @param response
+     * @return
+     */
+    @RequestMapping(value = "/logout", method = RequestMethod.GET)
+    public Result logout(HttpServletResponse response, HttpServletRequest request) {
+        CookieUtil.removeCookie(response);
+        CacheUtil.removeUserInfo(CookieUtil.getCookieValue(request));
+        return Result.success();
+    }
+
+    /**
+     * 异步验证email是否注册
+     *
+     * @param email
+     * @return
+     */
+    @RequestMapping(value = "/mail", method = RequestMethod.POST)
+    @ResponseBody
+    public Result<User> existMail(String email) {
+        return userService.getUser(email);
+    }
+
+    /**
+     * 判断用户名是否注册过
+     *
+     * @param username
+     * @return
+     */
+    @RequestMapping(value = "/username", method = RequestMethod.POST)
+    @ResponseBody
+    public Result existUser(String username) {
+        return userService.existUser(username);
+    }
+
+    /**
+     * 提交认证信息
+     *
+     * @param confirmInfo
+     * @return
+     */
+    @RequestMapping(value = "/submit/confirm")
+    @ResponseBody
+    public Result submitConfirm(ConfirmInfo confirmInfo) {
+        return confirmInfoService.saveConfirmInfo(confirmInfo);
+    }
+
+
+    /**
+     * 查看是否已经提交认证信息
+     *
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "/exist/confirm")
+    @ResponseBody
+    public Result existConfirm(HttpServletRequest request) {
+        User user = CacheUtil.getUserInfo(CookieUtil.getCookieValue(request));
+        Long userId = user.getUserId();
+        return confirmInfoService.getConfirmInfoByUserId(userId);
+    }
+
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+
+    public void setCaptchaProducer(Producer captchaProducer) {
+        this.captchaProducer = captchaProducer;
+    }
+}

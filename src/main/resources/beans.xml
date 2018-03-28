@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <import resource="classpath:Spring-mail.xml"/>
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close"
+          p:driverClass="${driverClass}"
+          p:jdbcUrl="${jdbcUrl}"
+          p:user="${user}"
+          p:password="${password}"
+          p:acquireIncrement="10"
+          p:initialPoolSize="10"
+          p:maxIdleTime="40"
+          p:maxPoolSize="40"
+          p:minPoolSize="10"/>
+    <!--mybatis的sqlSessionFactory-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean"
+          p:dataSource-ref="dataSource"
+          p:configLocation="classpath:sqlMapperConfig.xml"
+          p:mapperLocations="classpath:mapper/*.xml"
+          p:typeAliasesPackage="com.cqupt.project.entity"/>
+
+    <!--采用自动扫描方式创建mapper bean-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.cqupt.project"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <property name="annotationClass" value="org.springframework.stereotype.Repository"/>
+    </bean>
+
+    <!--事务管理-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--注解事务-->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <context:component-scan base-package="com.cqupt.project"/>
+
+    <!--配置captcha验证码-->
+    <bean id="captchaProducer" class="com.google.code.kaptcha.impl.DefaultKaptcha">
+        <property name="config">
+            <bean class="com.google.code.kaptcha.util.Config">
+                <constructor-arg>
+                    <props>
+                        <prop key="kaptcha.border">no</prop>
+                        <prop key="kaptcha.border.color">105,179,90</prop>
+                        <prop key="kaptcha.textproducer.font.color">red</prop>
+                        <prop key="kaptcha.image.width">250</prop>
+                        <prop key="kaptcha.textproducer.font.size">90</prop>
+                        <prop key="kaptcha.image.height">90</prop>
+                        <prop key="kaptcha.session.key">code</prop>
+                        <prop key="kaptcha.textproducer.char.length">4</prop>
+                        <prop key="kaptcha.textproducer.font.names">宋体,楷体,微软雅黑</prop>
+                    </props>
+                </constructor-arg>
+            </bean>
+        </property>
+    </bean>
+</beans>

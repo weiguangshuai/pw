@@ -1,0 +1,54 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cqupt.project.dao.SoftWareDao">
+
+    <sql id="Base_Column_List">
+        software_id, path, software_name, introduction, user_id
+    </sql>
+    <insert id="saveSoftware" parameterType="SoftWare">
+        INSERT INTO software (path, software_name, introduction, user_id)
+        VALUES (#{path}, #{softwareName}, #{introduction}, #{userId})
+    </insert>
+
+    <update id="updateSoftware" parameterType="SoftWare">
+        UPDATE software
+        <set>
+            <if test="path != null">
+                path = #{path},
+            </if>
+            <if test="softwareName != null">
+                software_name = #{softwareName},
+            </if>
+            <if test="introduction != null">
+                introduction = #{introduction},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+        </set>
+        where software_id = #{softwareId}
+    </update>
+
+    <delete id="deleteSoftware" parameterType="int">
+        DELETE FROM software
+        WHERE software_id = #{softwareId}
+    </delete>
+    <select id="selectByUserId" resultType="com.cqupt.project.entity.SoftWare">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM software WHERE user_id = #{userId}
+    </select>
+    <select id="selectBySoftwareId" resultType="com.cqupt.project.entity.SoftWare">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM software WHERE software_id = #{softwareId}
+    </select>
+    <select id="selectBySoftwareName" resultType="com.cqupt.project.entity.SoftWare">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM software WHERE software_name = #{software_name}
+    </select>
+
+
+</mapper>
