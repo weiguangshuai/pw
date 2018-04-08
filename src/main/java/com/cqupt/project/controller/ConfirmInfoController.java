@@ -25,7 +25,7 @@ public class ConfirmInfoController {
      * @param confirmInfo
      * @return
      */
-    @RequestMapping(value = "/submit", method = RequestMethod.GET)
+    @RequestMapping(value = "/submit", method = RequestMethod.POST)
     public Result submitConfirmInfo(ConfirmInfo confirmInfo) {
         return confirmInfoService.saveConfirmInfo(confirmInfo);
     }

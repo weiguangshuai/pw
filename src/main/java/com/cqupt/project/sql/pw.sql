@@ -54,7 +54,6 @@ CREATE TABLE `document` (
   AUTO_INCREMENT = 1000
   DEFAULT CHARSET = utf8
   COMMENT '文档表';
-
 -- ------------------
 -- table structure for software
 -- ------------------

@@ -1,5 +1,6 @@
 package com.cqupt.project.controller;
 
+import com.cqupt.project.commons.IdentityEnum;
 import com.cqupt.project.commons.Result;
 import com.cqupt.project.entity.ConfirmInfo;
 import com.cqupt.project.entity.User;
@@ -59,7 +60,7 @@ public class UserController {
          * 1代表普通用户
          * 2代表管理员用户
          */
-        user.setAuthority(1);
+        user.setAuthority(IdentityEnum.NORMAL.getCode());
         user.setPassword(MD5Util.encodeByMD5(user.getPassword()));
         String userLogin = CookieUtil.setLoginUser(response);
         CacheUtil.setUserInfo(userLogin, user);
@@ -115,12 +116,11 @@ public class UserController {
      *
      * @param response
      * @param user
-     * @param model
      * @return
      */
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     @ResponseBody
-    public Result login(HttpServletResponse response, User user, Model model) {
+    public Result login(HttpServletResponse response, User user) {
 
         Result result = userService.userLogin(user.getEmail(),
                 MD5Util.encodeByMD5(user.getPassword()));
@@ -170,18 +170,6 @@ public class UserController {
         return userService.existUser(username);
     }
 
-    /**
-     * 提交认证信息
-     *
-     * @param confirmInfo
-     * @return
-     */
-    @RequestMapping(value = "/submit/confirm")
-    @ResponseBody
-    public Result submitConfirm(ConfirmInfo confirmInfo) {
-        return confirmInfoService.saveConfirmInfo(confirmInfo);
-    }
-
 
     /**
      * 查看是否已经提交认证信息
@@ -189,7 +177,7 @@ public class UserController {
      * @param request
      * @return
      */
-    @RequestMapping(value = "/exist/confirm")
+    @RequestMapping(value = "/exist/confirm", method = RequestMethod.GET)
     @ResponseBody
     public Result existConfirm(HttpServletRequest request) {
         User user = CacheUtil.getUserInfo(CookieUtil.getCookieValue(request));

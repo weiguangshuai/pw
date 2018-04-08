@@ -82,10 +82,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public Result<User> getUser(String email) {
         User user = userDao.getUserByEmail(email);
-        if (user != null) {
-            return Result.success(user);
-        }
-        return Result.error("请注册");
+        if (user == null) {
+            return Result.success();
+    }
+        return Result.error("邮箱已被注册");
     }
 
     @Override

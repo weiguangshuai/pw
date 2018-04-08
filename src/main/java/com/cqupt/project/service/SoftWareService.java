@@ -2,6 +2,7 @@ package com.cqupt.project.service;
 
 import com.cqupt.project.commons.Result;
 import com.cqupt.project.entity.SoftWare;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,4 +24,5 @@ public interface SoftWareService {
 
     Result<List<SoftWare>> getBySoftwareName(String softwareName);
 
+    Result uploadSoftware(MultipartFile file, String path);
 }

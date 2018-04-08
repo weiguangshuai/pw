@@ -5,8 +5,11 @@ import com.cqupt.project.entity.SoftWare;
 import com.cqupt.project.service.SoftWareService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author weigs
@@ -33,6 +36,20 @@ public class SoftwareController {
     }
 
     /**
+     * 上传软件
+     *
+     * @param file
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "/upload", method = RequestMethod.POST)
+    public Result uploadSoftware(MultipartFile file, HttpServletRequest request) {
+        String path = request.getSession().getServletContext().getRealPath("/upload");
+        path = path + "/" + UUID.randomUUID();
+        return softWareService.uploadSoftware(file, path);
+    }
+
+    /**
      * 删除某个软件
      *
      * @param softwareId
@@ -40,7 +57,15 @@ public class SoftwareController {
      */
     @RequestMapping(value = "/delete/{softwareId}", method = RequestMethod.GET)
     public Result deleteSoftware(@PathVariable("softwareId") Integer softwareId) {
-        //todo 从ftp服务器上删除文件
+        Result<SoftWare> softwareResult = softWareService.getBySoftwareId(softwareId);
+        if (softwareResult.isSuccess()) {
+            SoftWare softWare = softwareResult.getData();
+            String path = softWare.getPath();
+            String softwareName = softWare.getSoftwareName();
+
+        } else {
+            return Result.error("参数错误");
+        }
         return softWareService.deleteSoftware(softwareId);
     }
 
@@ -59,12 +84,12 @@ public class SoftwareController {
     /**
      * 根据软件id获取软件详情
      *
-     * @param sofewareId
+     * @param softwareId
      * @return
      */
     @RequestMapping(value = "/{softwareId}", method = RequestMethod.GET)
-    public Result<SoftWare> getSoftware(@PathVariable("softwareId") Integer sofewareId) {
-        return softWareService.getBySoftwareId(sofewareId);
+    public Result<SoftWare> getSoftware(@PathVariable("softwareId") Integer softwareId) {
+        return softWareService.getBySoftwareId(softwareId);
     }
 
 
@@ -76,7 +101,6 @@ public class SoftwareController {
      */
     @RequestMapping(value = "/{softwareName}", method = RequestMethod.GET)
     public Result<List<SoftWare>> getBySoftwareName(@PathVariable("softwareName") String softwareName) {
-
         return softWareService.getBySoftwareName(softwareName);
     }
 }

@@ -5,8 +5,8 @@ package com.cqupt.project.commons;
  * @date 2018/3/18 0018
  */
 public enum ResponseCode {
-    SUCCESS(0,"success"),
-    ERROR(1,"error"),
+    SUCCESS(1,"success"),
+    ERROR(0,"error"),
     NEED_LOGIN(2,"need login");
     private int code;
     private String desc;
