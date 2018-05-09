@@ -3,13 +3,13 @@ package com.cqupt.project.service.impl;
 import com.cqupt.project.commons.Result;
 import com.cqupt.project.dao.SoftWareDao;
 import com.cqupt.project.entity.SoftWare;
+import com.cqupt.project.entity.User;
 import com.cqupt.project.service.SoftWareService;
-import com.cqupt.project.util.FTPUtil;
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -89,8 +89,9 @@ public class SoftWareServiceImpl implements SoftWareService {
     }
 
     //上传文件
+    @Transactional
     @Override
-    public Result uploadSoftware(MultipartFile file, String path) {
+    public Result<String> uploadFile(MultipartFile file, String path, SoftWare softWare) {
         String filename = file.getOriginalFilename();
         File fileDir = new File(path);
         if (!fileDir.exists()) {
@@ -100,12 +101,15 @@ public class SoftWareServiceImpl implements SoftWareService {
         File uploadFile = new File(path, filename);
         try {
             file.transferTo(uploadFile);
-            FTPUtil.uploadFile("file", Lists.newArrayList(uploadFile));
-            uploadFile.delete();
+            //todo
+            softWare.setPath(uploadFile.getPath());
+            softWareDao.saveSoftware(softWare);
+//            FTPUtil.uploadFile("file", Lists.newArrayList(uploadFile));
+//            uploadFile.delete();
         } catch (IOException e) {
             log.error("上传文件错误", e);
             return Result.error("上传失败");
         }
-        return Result.success();
+        return Result.success(uploadFile.getPath());
     }
 }

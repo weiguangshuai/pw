@@ -27,7 +27,7 @@
         where user_id = #{userId}
     </update>
 
-    <select id="findConfirmInfo" parameterType="int" resultType="com.cqupt.project.entity.ConfirmInfo">
+    <select id="findConfirmInfo" parameterType="long" resultType="com.cqupt.project.entity.ConfirmInfo">
         SELECT *
         FROM confirm_info
         WHERE user_id = #{userId}

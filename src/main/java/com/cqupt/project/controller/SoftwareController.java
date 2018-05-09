@@ -2,7 +2,10 @@ package com.cqupt.project.controller;
 
 import com.cqupt.project.commons.Result;
 import com.cqupt.project.entity.SoftWare;
+import com.cqupt.project.entity.User;
 import com.cqupt.project.service.SoftWareService;
+import com.cqupt.project.util.CookieUtil;
+import com.cqupt.project.util.FastJsonConvert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,10 +46,16 @@ public class SoftwareController {
      * @return
      */
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
-    public Result uploadSoftware(MultipartFile file, HttpServletRequest request) {
+    public Result uploadSoftware(MultipartFile file, HttpServletRequest request, String softwareName, String introduction) {
         String path = request.getSession().getServletContext().getRealPath("/upload");
-        path = path + "/" + UUID.randomUUID();
-        return softWareService.uploadSoftware(file, path);
+        String userStr = CookieUtil.getCookieValue(request);
+        User user = FastJsonConvert.converJSONToObject(userStr, User.class);
+        path = path + "\\" + UUID.randomUUID();
+        SoftWare softWare = new SoftWare();
+        softWare.setUserId((int) user.getUserId());
+        softWare.setSoftwareName(softwareName);
+        softWare.setIntroduction(introduction);
+        return softWareService.uploadFile(file, path, softWare);
     }
 
     /**
@@ -99,7 +108,7 @@ public class SoftwareController {
      * @param softwareName
      * @return
      */
-    @RequestMapping(value = "/{softwareName}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{softwareName}/name", method = RequestMethod.GET)
     public Result<List<SoftWare>> getBySoftwareName(@PathVariable("softwareName") String softwareName) {
         return softWareService.getBySoftwareName(softwareName);
     }

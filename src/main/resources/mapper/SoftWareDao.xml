@@ -39,7 +39,7 @@
         <include refid="Base_Column_List"/>
         FROM software WHERE user_id = #{userId}
     </select>
-    <select id="selectBySoftwareId" resultType="com.cqupt.project.entity.SoftWare">
+    <select id="selectBySoftwareId" resultType="com.cqupt.project.entity.SoftWare" parameterType="int">
         SELECT
         <include refid="Base_Column_List"/>
         FROM software WHERE software_id = #{softwareId}

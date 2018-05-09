@@ -9,10 +9,11 @@
     2、默认提供一系列的功能:数据绑定，数字和日期的format@NumberFormat,@DateTimeFormat
     3、xml,json的默认读写支持-->
     <mvc:annotation-driven/>
+    <bean name="applicationSwaggerConfig" class="com.cqupt.project.SwaggerConfig"/>
 
     <!--静态资源的默认配置-->
     <mvc:default-servlet-handler/>
-    <!--<mvc:resources mapping="/resources/**" location="/ueditor/"/>-->
+    <mvc:resources mapping="/swagger/**" location="/swagger-ui/"/>
 
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
         <property name="prefix" value="/WEB-INF/jsp/"/>
@@ -21,7 +22,6 @@
 
     <!--扫描controller相关的注解-->
     <context:component-scan base-package="com.cqupt.project.controller"/>
-
     <!--配置拦截器-->
     <mvc:interceptors>
         <mvc:interceptor>

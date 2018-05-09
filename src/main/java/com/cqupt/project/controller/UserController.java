@@ -2,20 +2,18 @@ package com.cqupt.project.controller;
 
 import com.cqupt.project.commons.IdentityEnum;
 import com.cqupt.project.commons.Result;
-import com.cqupt.project.entity.ConfirmInfo;
 import com.cqupt.project.entity.User;
+import com.cqupt.project.redis.JedisClient;
 import com.cqupt.project.service.ConfirmInfoService;
 import com.cqupt.project.service.UserService;
-import com.cqupt.project.util.CacheUtil;
-import com.cqupt.project.util.CookieUtil;
-import com.cqupt.project.util.MD5Util;
-import com.cqupt.project.util.MailUtil;
+import com.cqupt.project.util.*;
 import com.google.code.kaptcha.Constants;
 import com.google.code.kaptcha.Producer;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +28,7 @@ import java.util.Date;
  * @author weigs
  * @date 2017/11/16 0016
  */
+@Api(value = "UserController", description = "Hello控制器")
 @Controller
 @RequestMapping(value = "/user")
 @CrossOrigin("*")
@@ -45,12 +44,16 @@ public class UserController {
     @Autowired
     private ConfirmInfoService confirmInfoService;
 
+    @Autowired
+    private JedisClient jedisClient;
+
     /**
      * 用户注册
      *
      * @param user
      * @return
      */
+    @ApiOperation(value = "用户注册", httpMethod = "POST", response = Result.class)
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     @ResponseBody
     public Result register(User user, HttpServletResponse response) {
@@ -63,8 +66,9 @@ public class UserController {
         user.setAuthority(IdentityEnum.NORMAL.getCode());
         user.setPassword(MD5Util.encodeByMD5(user.getPassword()));
         String userLogin = CookieUtil.setLoginUser(response);
-        CacheUtil.setUserInfo(userLogin, user);
-
+//        CacheUtil.setUserInfo(userLogin, user);
+        String userText = FastJsonConvert.convertObjectToJSON(user);
+        jedisClient.set(userLogin, userText);
         return userService.saveUserInfo(user);
     }
 
@@ -125,10 +129,12 @@ public class UserController {
         Result result = userService.userLogin(user.getEmail(),
                 MD5Util.encodeByMD5(user.getPassword()));
 
-        //判断是否登录成功，登录成功就将数据存入cookie和缓存中
+        //判断是否登录成功，登录成功就将数据存入cookie和redis缓存中
         if (result.isSuccess()) {
             String userLogin = CookieUtil.setLoginUser(response);
-            CacheUtil.setUserInfo(userLogin, (User) result.getData());
+//            CacheUtil.setUserInfo(userLogin, (User) result.getData());
+            String userText = FastJsonConvert.convertObjectToJSON(result.getData());
+            jedisClient.set(userLogin, userText);
         }
         return result;
     }
@@ -141,8 +147,10 @@ public class UserController {
      */
     @RequestMapping(value = "/logout", method = RequestMethod.GET)
     public Result logout(HttpServletResponse response, HttpServletRequest request) {
+        String userKey = CookieUtil.getCookieValue(request);
         CookieUtil.removeCookie(response);
-        CacheUtil.removeUserInfo(CookieUtil.getCookieValue(request));
+//        CacheUtil.removeUserInfo(CookieUtil.getCookieValue(request));
+        jedisClient.del(userKey);
         return Result.success();
     }
 

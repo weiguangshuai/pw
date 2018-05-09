@@ -13,5 +13,9 @@
 <body>
 
 <h1>login</h1>
+<form name="serFrom" action="/document/upload/image" method="post" enctype="multipart/form-data">
+    <input type="file" name="file"/>
+    <input type="submit" value="upload"/>
+</form>
 </body>
 </html>

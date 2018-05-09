@@ -4,9 +4,14 @@ import com.cqupt.project.commons.Result;
 import com.cqupt.project.dao.DocumentDao;
 import com.cqupt.project.entity.Document;
 import com.cqupt.project.service.DocumentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -15,6 +20,8 @@ import java.util.List;
  */
 @Service
 public class DocumentServiceImpl implements DocumentService {
+
+    private static final Logger log = LoggerFactory.getLogger(DocumentServiceImpl.class);
 
     @Autowired
     private DocumentDao documentDao;
@@ -68,5 +75,25 @@ public class DocumentServiceImpl implements DocumentService {
             return Result.success();
         }
         return Result.error("文档更新失败，请重试");
+    }
+
+    @Override
+    public Result<String> uploadFile(MultipartFile file, String path) {
+        String filename = file.getOriginalFilename();
+        File fileDir = new File(path);
+        if (!fileDir.exists()) {
+            fileDir.setWritable(true);
+            fileDir.mkdirs();
+        }
+        File uploadFile = new File(path, filename);
+        try {
+            file.transferTo(uploadFile);
+//            FTPUtil.uploadFile("file", Lists.newArrayList(uploadFile));
+//            uploadFile.delete();
+        } catch (IOException e) {
+            log.error("上传文件错误", e);
+            return Result.error("上传失败");
+        }
+        return Result.success(uploadFile.getPath());
     }
 }

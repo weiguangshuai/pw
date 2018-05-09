@@ -6,9 +6,15 @@ import com.cqupt.project.service.DocumentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author weigs
@@ -16,7 +22,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping(value = "/document")
-@CrossOrigin("*")
+//@CrossOrigin("*")
 public class DocumentController {
 
     private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
@@ -32,7 +38,6 @@ public class DocumentController {
      */
     @RequestMapping(value = "/submit")
     public Result submitDoc(Document document) {
-
         return documentService.saveDocument(document);
     }
 
@@ -90,5 +95,20 @@ public class DocumentController {
             return Result.error("参数错误");
         }
         return documentService.getBySoftwareId(softwareId);
+    }
+
+    /**
+     * 上传图片
+     *
+     * @param file
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "/upload/image", method = RequestMethod.POST)
+    public Result<String> uploadImage(MultipartFile file, HttpServletRequest request) {
+        String path = request.getSession().getServletContext().getRealPath("/image");
+        path = path + "\\" + UUID.randomUUID().toString().replace("-", "");
+        log.info("文件上传的路径为：" + path);
+        return documentService.uploadFile(file, path);
     }
 }
